@@ -45,7 +45,7 @@ try:
         "⚖️ Keseimbangan Perdagangan"
     ])
 
-    # --- TAB 1: ANALISIS UTAMA (KODE AWAL) ---
+    # --- TAB 1: ANALISIS UTAMA ---
     with tab_awal:
         st.header("Analisis Dasar Arus Barang")
         all_komo = df['Komoditas'].unique().tolist()
@@ -81,7 +81,8 @@ try:
             st.subheader("Komposisi Aktivitas")
             fig_pie = px.pie(df, values='Berat', names='Aktivitas', hole=0.5, color_discrete_sequence=px.colors.qualitative.Pastel)
             st.plotly_chart(fig_pie, use_container_width=True)
-       with col_top:
+            
+        with col_top:
             # --- TOP 5 BONGKAR ---
             st.subheader("Top 5 Komoditas Bongkar")
             top5_bongkar = df[df['Aktivitas'] == 'Bongkar'].groupby('Komoditas')['Berat'].sum().nlargest(5).reset_index()
@@ -125,7 +126,6 @@ try:
     # --- TAB 4: ANALISIS KOMODITAS ---
     with tab_komoditas:
         st.header("Analisis Komoditas Unggulan")
-        # Detail Filter Per Komoditas tunggal
         komo_pilihan = st.selectbox("Pilih Komoditas Spesifik:", df['Komoditas'].unique())
         df_spesifik = df[df['Komoditas'] == komo_pilihan]
         
@@ -140,7 +140,6 @@ try:
     # --- TAB 5: KESEIMBANGAN PERDAGANGAN ---
     with tab_trade:
         st.header("Keseimbangan Perdagangan Regional")
-        # Pivot untuk menghitung selisih
         df_pv = df.pivot_table(index='Komoditas', columns='Aktivitas', values='Berat', aggfunc='sum').fillna(0)
         df_pv['Gap (B-M)'] = df_pv['Bongkar'] - df_pv['Muat']
         
