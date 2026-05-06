@@ -81,11 +81,39 @@ try:
             st.subheader("Komposisi Aktivitas")
             fig_pie = px.pie(df, values='Berat', names='Aktivitas', hole=0.5, color_discrete_sequence=px.colors.qualitative.Pastel)
             st.plotly_chart(fig_pie, use_container_width=True)
-        with col_top:
-            st.subheader("Top 5 Komoditas Terbesar")
-            top5 = df.groupby('Komoditas')['Berat'].sum().nlargest(5).reset_index()
-            fig_top = px.bar(top5, x='Berat', y='Komoditas', orientation='h', color='Komoditas')
-            st.plotly_chart(fig_top, use_container_width=True)
+       with col_top:
+            # --- TOP 5 BONGKAR ---
+            st.subheader("Top 5 Komoditas Bongkar")
+            top5_bongkar = df[df['Aktivitas'] == 'Bongkar'].groupby('Komoditas')['Berat'].sum().nlargest(5).reset_index()
+            fig_bongkar = px.bar(
+                top5_bongkar, 
+                x='Berat', 
+                y='Komoditas', 
+                orientation='h', 
+                color='Komoditas',
+                color_discrete_sequence=px.colors.qualitative.Prism,
+                labels={'Berat': 'Total Berat (Ton)'}
+            )
+            # Menghilangkan legenda agar grafik tidak terlalu sempit di kolom
+            fig_bongkar.update_layout(showlegend=False) 
+            st.plotly_chart(fig_bongkar, use_container_width=True)
+
+            st.divider() # Garis pembatas agar rapi
+
+            # --- TOP 5 MUAT ---
+            st.subheader("Top 5 Komoditas Muat")
+            top5_muat = df[df['Aktivitas'] == 'Muat'].groupby('Komoditas')['Berat'].sum().nlargest(5).reset_index()
+            fig_muat = px.bar(
+                top5_muat, 
+                x='Berat', 
+                y='Komoditas', 
+                orientation='h', 
+                color='Komoditas',
+                color_discrete_sequence=px.colors.qualitative.Safe,
+                labels={'Berat': 'Total Berat (Ton)'}
+            )
+            fig_muat.update_layout(showlegend=False)
+            st.plotly_chart(fig_muat, use_container_width=True)
 
     # --- TAB 3: TREN & MUSIMAN ---
     with tab_tren:
