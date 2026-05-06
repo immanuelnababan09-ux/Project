@@ -94,11 +94,10 @@ try:
                 color_discrete_sequence=px.colors.qualitative.Prism,
                 labels={'Berat': 'Total Berat (Ton)'}
             )
-            # Menghilangkan legenda agar grafik tidak terlalu sempit di kolom
             fig_bongkar.update_layout(showlegend=False) 
             st.plotly_chart(fig_bongkar, use_container_width=True)
 
-            st.divider() # Garis pembatas agar rapi
+            st.divider()
 
             # --- TOP 5 MUAT ---
             st.subheader("Top 5 Komoditas Muat")
