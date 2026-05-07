@@ -27,32 +27,6 @@ def load_data():
     
     df_total = pd.concat([df_b, df_m], ignore_index=True)
     df_total['Berat'] = pd.to_numeric(df_total['Berat'], errors='coerce').fillna(0)
-
-    # --- PENGOLAHAN WAKTU (PERBAIKAN) ---
-    # 1. Terjemahkan singkatan bulan ID ke EN agar bisa dibaca Python
-    bulan_map = {
-        'Mei': 'May',
-        'Ags': 'Aug',
-        'Okt': 'Oct',
-        'Des': 'Dec'
-    }
-    df_total['Bulan_En'] = df_total['Bulan'].replace(bulan_map, regex=True)
-    
-    # 2. Konversi ke format Tanggal yang benar
-    df_total['Tanggal'] = pd.to_datetime(df_total['Bulan_En'], format='%b %Y', errors='coerce')
-    
-    # 3. Ekstrak Tahun dan Triwulan (Abaikan baris yang formatnya benar-benar salah/kosong)
-    df_total = df_total.dropna(subset=['Tanggal'])
-    df_total['Tahun'] = df_total['Tanggal'].dt.year.astype(int)
-    df_total['Triwulan'] = df_total['Tanggal'].dt.quarter
-    
-    # 4. Buat Nama Bulan dalam Bahasa Indonesia penuh untuk tampilan UI
-    nama_bulan_id = {
-        1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April',
-        5: 'Mei', 6: 'Juni', 7: 'Juli', 8: 'Agustus',
-        9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember'
-    }
-    df_total['Nama_Bulan'] = df_total['Tanggal'].dt.month.map(nama_bulan_id)
     
     return df_total
 
@@ -74,63 +48,19 @@ try:
     # --- TAB 1: ANALISIS UTAMA ---
     with tab_awal:
         st.header("Analisis Dasar Arus Barang")
+        all_komo = df['Komoditas'].unique().tolist()
+        sel_komo = st.multiselect("Filter Komoditas (Tab Utama):", all_komo, default=all_komo[:3], key="main_komo")
         
-        # --- BARIS FILTER (BARU) ---
-        st.subheader("🔍 Filter Data")
-        f_col1, f_col2, f_col3, f_col4 = st.columns(4)
+        df_f = df[df['Komoditas'].isin(sel_komo)]
         
-        with f_col1:
-            all_komo = sorted(df['Komoditas'].unique().tolist())
-            sel_komo = st.multiselect("Pilih Komoditas:", all_komo, default=all_komo[:2])
-            
-        with f_col2:
-            all_years = sorted(df['Tahun'].dropna().unique().tolist(), reverse=True)
-            sel_year = st.multiselect("Pilih Tahun:", all_years, default=all_years)
-            
-        with f_col3:
-            all_q = [1, 2, 3, 4]
-            sel_q = st.multiselect("Pilih Triwulan (Q):", all_q, default=all_q)
-            
-        with f_col4:
-            # Menggunakan daftar nama bulan bahasa Indonesia
-            all_months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", 
-                          "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
-            sel_month = st.multiselect("Pilih Bulan:", all_months, default=all_months)
-        # Logika Filter Berantai
-        df_f = df[
-            (df['Komoditas'].isin(sel_komo)) &
-            (df['Tahun'].isin(sel_year)) &
-            (df['Triwulan'].isin(sel_q)) &
-            (df['Nama_Bulan'].isin(sel_month))
-        ]
+        st.subheader("Tren Berat Per Bulan")
+        st.line_chart(df_f.pivot_table(index='Bulan', columns='Aktivitas', values='Berat', aggfunc='sum'))
         
-        # Cek jika data hasil filter kosong
-        if df_f.empty:
-            st.warning("Data tidak ditemukan untuk kombinasi filter tersebut.")
-        else:
-            st.subheader("📈 Visualisasi Hasil Filter")
-            v_col1, v_col2 = st.columns(2)
-            
-            with v_col1:
-                st.write("**Tren Berat Per Bulan**")
-                # Mengurutkan berdasarkan tanggal agar garis tren tidak acak
-                chart_data = df_f.sort_values('Tanggal').pivot_table(
-                    index='Bulan', columns='Aktivitas', values='Berat', aggfunc='sum'
-                )
-                st.line_chart(chart_data)
-                
-            with v_col2:
-                st.write("**Perbandingan Volume per Komoditas**")
-                st.bar_chart(df_f.groupby(['Komoditas', 'Aktivitas'])['Berat'].sum().unstack())
+        st.subheader("Perbandingan Volume")
+        st.bar_chart(df_f.groupby(['Komoditas', 'Aktivitas'])['Berat'].sum().unstack())
 
-            st.subheader("📄 Tabel Data Terfilter")
-            st.dataframe(df_f.drop(columns=['Tanggal']), use_container_width=True)
-
-    # ... (Bagian TAB 2, 3, 4, 5 tetap sama seperti kode sebelumnya) ...
-    # Pastikan Anda tetap menyalin bagian Tab 2-5 dari kode Anda yang lama ke bawah sini.
-
-except Exception as e:
-    st.error(f"Terjadi kendala: {e}")
+        st.subheader("📄 Tabel Data Terfilter")
+        st.dataframe(df_f, use_container_width=True)
     # --- TAB 2: EXECUTIVE SUMMARY ---
     with tab_exec:
         st.header("Dashboard Ringkasan Kinerja")
