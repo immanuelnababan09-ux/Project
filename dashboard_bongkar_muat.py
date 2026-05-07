@@ -28,12 +28,31 @@ def load_data():
     df_total = pd.concat([df_b, df_m], ignore_index=True)
     df_total['Berat'] = pd.to_numeric(df_total['Berat'], errors='coerce').fillna(0)
 
-    # --- PENGOLAHAN WAKTU (BARU) ---
-    # Mengonversi string 'Jan 2019' menjadi datetime
-    df_total['Tanggal'] = pd.to_datetime(df_total['Bulan'], format='%b %Y', errors='coerce')
-    df_total['Tahun'] = df_total['Tanggal'].dt.year
+    # --- PENGOLAHAN WAKTU (PERBAIKAN) ---
+    # 1. Terjemahkan singkatan bulan ID ke EN agar bisa dibaca Python
+    bulan_map = {
+        'Mei': 'May',
+        'Ags': 'Aug',
+        'Okt': 'Oct',
+        'Des': 'Dec'
+    }
+    df_total['Bulan_En'] = df_total['Bulan'].replace(bulan_map, regex=True)
+    
+    # 2. Konversi ke format Tanggal yang benar
+    df_total['Tanggal'] = pd.to_datetime(df_total['Bulan_En'], format='%b %Y', errors='coerce')
+    
+    # 3. Ekstrak Tahun dan Triwulan (Abaikan baris yang formatnya benar-benar salah/kosong)
+    df_total = df_total.dropna(subset=['Tanggal'])
+    df_total['Tahun'] = df_total['Tanggal'].dt.year.astype(int)
     df_total['Triwulan'] = df_total['Tanggal'].dt.quarter
-    df_total['Nama_Bulan'] = df_total['Tanggal'].dt.month_name()
+    
+    # 4. Buat Nama Bulan dalam Bahasa Indonesia penuh untuk tampilan UI
+    nama_bulan_id = {
+        1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April',
+        5: 'Mei', 6: 'Juni', 7: 'Juli', 8: 'Agustus',
+        9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember'
+    }
+    df_total['Nama_Bulan'] = df_total['Tanggal'].dt.month.map(nama_bulan_id)
     
     return df_total
 
@@ -73,10 +92,10 @@ try:
             sel_q = st.multiselect("Pilih Triwulan (Q):", all_q, default=all_q)
             
         with f_col4:
-            all_months = ["January", "February", "March", "April", "May", "June", 
-                          "July", "August", "September", "October", "November", "December"]
+            # Menggunakan daftar nama bulan bahasa Indonesia
+            all_months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+                          "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
             sel_month = st.multiselect("Pilih Bulan:", all_months, default=all_months)
-
         # Logika Filter Berantai
         df_f = df[
             (df['Komoditas'].isin(sel_komo)) &
