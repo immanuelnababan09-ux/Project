@@ -48,20 +48,63 @@ try:
     # --- TAB 1: ANALISIS UTAMA ---
     with tab_awal:
         st.header("Analisis Dasar Arus Barang")
-        all_komo = df['Komoditas'].unique().tolist()
-        sel_komo = st.multiselect("Filter Komoditas (Tab Utama):", all_komo, default=all_komo[:3], key="main_komo")
         
-        df_f = df[df['Komoditas'].isin(sel_komo)]
+        # --- BARIS FILTER (BARU) ---
+        st.subheader("🔍 Filter Data")
+        f_col1, f_col2, f_col3, f_col4 = st.columns(4)
         
-        st.subheader("Tren Berat Per Bulan")
-        st.line_chart(df_f.pivot_table(index='Bulan', columns='Aktivitas', values='Berat', aggfunc='sum'))
-        
-        st.subheader("Perbandingan Volume")
-        st.bar_chart(df_f.groupby(['Komoditas', 'Aktivitas'])['Berat'].sum().unstack())
+        with f_col1:
+            all_komo = sorted(df['Komoditas'].unique().tolist())
+            sel_komo = st.multiselect("Pilih Komoditas:", all_komo, default=all_komo[:2])
+            
+        with f_col2:
+            all_years = sorted(df['Tahun'].dropna().unique().tolist(), reverse=True)
+            sel_year = st.multiselect("Pilih Tahun:", all_years, default=all_years)
+            
+        with f_col3:
+            all_q = [1, 2, 3, 4]
+            sel_q = st.multiselect("Pilih Triwulan (Q):", all_q, default=all_q)
+            
+        with f_col4:
+            all_months = ["January", "February", "March", "April", "May", "June", 
+                          "July", "August", "September", "October", "November", "December"]
+            sel_month = st.multiselect("Pilih Bulan:", all_months, default=all_months)
 
-        st.subheader("📄 Tabel Data Terfilter")
-        st.dataframe(df_f, use_container_width=True)
+        # Logika Filter Berantai
+        df_f = df[
+            (df['Komoditas'].isin(sel_komo)) &
+            (df['Tahun'].isin(sel_year)) &
+            (df['Triwulan'].isin(sel_q)) &
+            (df['Nama_Bulan'].isin(sel_month))
+        ]
+        
+        # Cek jika data hasil filter kosong
+        if df_f.empty:
+            st.warning("Data tidak ditemukan untuk kombinasi filter tersebut.")
+        else:
+            st.subheader("📈 Visualisasi Hasil Filter")
+            v_col1, v_col2 = st.columns(2)
+            
+            with v_col1:
+                st.write("**Tren Berat Per Bulan**")
+                # Mengurutkan berdasarkan tanggal agar garis tren tidak acak
+                chart_data = df_f.sort_values('Tanggal').pivot_table(
+                    index='Bulan', columns='Aktivitas', values='Berat', aggfunc='sum'
+                )
+                st.line_chart(chart_data)
+                
+            with v_col2:
+                st.write("**Perbandingan Volume per Komoditas**")
+                st.bar_chart(df_f.groupby(['Komoditas', 'Aktivitas'])['Berat'].sum().unstack())
 
+            st.subheader("📄 Tabel Data Terfilter")
+            st.dataframe(df_f.drop(columns=['Tanggal']), use_container_width=True)
+
+    # ... (Bagian TAB 2, 3, 4, 5 tetap sama seperti kode sebelumnya) ...
+    # Pastikan Anda tetap menyalin bagian Tab 2-5 dari kode Anda yang lama ke bawah sini.
+
+except Exception as e:
+    st.error(f"Terjadi kendala: {e}")
     # --- TAB 2: EXECUTIVE SUMMARY ---
     with tab_exec:
         st.header("Dashboard Ringkasan Kinerja")
