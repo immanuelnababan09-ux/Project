@@ -27,6 +27,13 @@ def load_data():
     
     df_total = pd.concat([df_b, df_m], ignore_index=True)
     df_total['Berat'] = pd.to_numeric(df_total['Berat'], errors='coerce').fillna(0)
+
+    # --- PENGOLAHAN WAKTU (BARU) ---
+    # Mengonversi string 'Jan 2019' menjadi datetime
+    df_total['Tanggal'] = pd.to_datetime(df_total['Bulan'], format='%b %Y', errors='coerce')
+    df_total['Tahun'] = df_total['Tanggal'].dt.year
+    df_total['Triwulan'] = df_total['Tanggal'].dt.quarter
+    df_total['Nama_Bulan'] = df_total['Tanggal'].dt.month_name()
     
     return df_total
 
