@@ -762,7 +762,7 @@ try:
 
         styled_raw = (
             df_f.style
-            .applymap(style_berat, subset=['Berat'])
+            .map(style_berat, subset=['Berat'])
             .set_properties(**{
                 'font-size': '0.82rem',
                 'border-color': 'rgba(0,212,255,0.10)',
@@ -972,10 +972,10 @@ try:
         styled_disp = (
             disp.style
             .format({'Bongkar': '{:,.0f}', 'Muat': '{:,.0f}', 'Gap': '{:,.0f}'})
-            .applymap(color_bongkar, subset=['Bongkar'])
-            .applymap(color_muat, subset=['Muat'])
-            .applymap(color_gap, subset=['Gap'])
-            .applymap(color_status, subset=['Status'])
+            .map(color_bongkar, subset=['Bongkar'])
+            .map(color_muat, subset=['Muat'])
+            .map(color_gap, subset=['Gap'])
+            .map(color_status, subset=['Status'])
             .set_properties(**{
                 'background-color': 'rgba(7,22,40,0.0)',
                 'border-color': 'rgba(0,212,255,0.10)',
