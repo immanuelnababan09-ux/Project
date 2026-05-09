@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="Logistics Intelligence Dashboard",
     layout="wide",
     page_icon="🚢",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # ─────────────────────────────────────────────
@@ -46,6 +46,8 @@ html, body, .stApp {
   font-family: 'Exo 2', sans-serif !important;
 }
 #MainMenu, footer, header { visibility: hidden; }
+[data-testid="collapsedControl"] { display: none !important; }
+[data-testid="stSidebar"] { display: none !important; }
 .block-container {
   padding: 1.2rem 2.2rem 4rem !important;
   max-width: 1700px !important;
